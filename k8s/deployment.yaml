@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hackathon-app
+  labels:
+    app: hackathon-app
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: hackathon-app
+
+  template:
+    metadata:
+      labels:
+        app: hackathon-app
+
+    spec:
+      containers:
+        - name: hackathon-app
+          image: IMAGE_PLACEHOLDER
+          ports:
+            - containerPort: 8080
