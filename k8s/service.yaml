@@ -6,7 +6,7 @@ metadata:
     app: hackathon-app
 
 spec:
-  type: LoadBalancer
+  type: NodePort
 
   selector:
     app: hackathon-app
@@ -15,3 +15,4 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8080
+      nodePort: 30007
