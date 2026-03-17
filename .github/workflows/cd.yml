@@ -28,7 +28,8 @@ jobs:
             --region ${{ secrets.AWS_REGION }} \
             --name ${{ secrets.EKS_CLUSTER_NAME }}
 
-      - name: Verify Cluster Connection
+      # ✅ Debug (ensures cluster connection)
+      - name: Verify Cluster
         run: |
           kubectl get nodes
           kubectl get deployments
@@ -37,15 +38,24 @@ jobs:
         run: |
           echo "IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}" >> $GITHUB_ENV
 
+      # ✅ Apply manifests (first-time + updates)
+      - name: Apply Kubernetes Manifests
+        run: |
+          kubectl apply -f deployment.yaml
+          kubectl apply -f service.yaml
+
+      # ✅ Update image
       - name: Deploy Latest Image to EKS
         run: |
           kubectl set image deployment/hackathon-app \
             hackathon-app=$IMAGE_URI:latest
 
+      # ✅ Verify rollout
       - name: Verify Deployment
         run: |
           kubectl rollout status deployment/hackathon-app
 
+      # ✅ Auto rollback
       - name: Rollback if Failed
         if: failure()
         run: |
