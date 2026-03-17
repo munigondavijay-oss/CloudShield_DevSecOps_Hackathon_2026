@@ -15,16 +15,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Download Image Tag Artifact
+      - name: Download Image Tag Artifact (from CI)
         uses: dawidd6/action-download-artifact@v3
         with:
-          workflow: CI Pipeline
+          run_id: ${{ github.event.workflow_run.id }}
           name: image-tag
           path: .
 
+      - name: Verify Files
+        run: ls -R
+
       - name: Read Image Tag
         run: |
-          ls -R   # debug
           IMAGE_TAG=$(cat image_tag.txt)
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
@@ -48,9 +50,8 @@ jobs:
       - name: Deploy to EKS
         run: |
           kubectl set image deployment/${{ secrets.K8S_DEPLOYMENT_NAME }} \
-          ${{ secrets.K8S_CONTAINER_NAME }}=$IMAGE_URI:${{ env.IMAGE_TAG }}
+            ${{ secrets.K8S_CONTAINER_NAME }}=$IMAGE_URI:${{ env.IMAGE_TAG }}
 
       - name: Verify Deployment
         run: |
-          kubectl rollout status deployment/${{ secrets.K8S_DEPLOYMENT_NAME }}                            
-      
+          kubectl rollout status deployment/${{ secrets.K8S_DEPLOYMENT_NAME }}
