@@ -50,4 +50,4 @@ jobs:
 
       - name: Verify Deployment
         run: |
-          kubectl rollout status deployment/${{ secrets.K8S_DEPLOYMENT_NAME }}
+          kubectl rollout status deployment/${{ secrets.K8S_DEPLOYMENT_NAME }} 
