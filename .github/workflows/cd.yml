@@ -12,8 +12,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Code (from main branch)
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -28,8 +30,8 @@ jobs:
             --region ${{ secrets.AWS_REGION }} \
             --name ${{ secrets.EKS_CLUSTER_NAME }}
 
-      # ✅ Debug (ensures cluster connection)
-      - name: Verify Cluster
+      # ✅ Debug: ensure cluster is reachable
+      - name: Verify Cluster Connection
         run: |
           kubectl get nodes
           kubectl get deployments
@@ -38,25 +40,25 @@ jobs:
         run: |
           echo "IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}" >> $GITHUB_ENV
 
-      # ✅ Apply manifests (first-time + updates)
+      # ✅ Ensure deployment exists (first-time safe)
       - name: Apply Kubernetes Manifests
         run: |
-          kubectl apply -f deployment.yaml
-          kubectl apply -f service.yaml
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
 
-      # ✅ Update image
+      # ✅ Deploy latest image
       - name: Deploy Latest Image to EKS
         run: |
           kubectl set image deployment/hackathon-app \
             hackathon-app=$IMAGE_URI:latest
 
-      # ✅ Verify rollout
+      # ✅ Wait for rollout
       - name: Verify Deployment
         run: |
           kubectl rollout status deployment/hackathon-app
 
-      # ✅ Auto rollback
+      # ✅ Rollback on failure
       - name: Rollback if Failed
         if: failure()
         run: |
-          kubectl rollout undo deployment/hackathon-app  
+          kubectl rollout undo deployment/hackathon-app
