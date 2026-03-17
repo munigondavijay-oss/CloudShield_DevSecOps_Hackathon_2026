@@ -44,4 +44,4 @@ jobs:
       - name: Rollback if Failed
         if: failure()
         run: |
-          kubectl rollout undo deployment/${{ secrets.K8S_DEPLOYMENT_NAME }}
+          kubectl rollout undo deployment/${{ secrets.K8S_DEPLOYMENT_NAME }}  
