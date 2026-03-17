@@ -34,8 +34,8 @@ jobs:
 
       - name: Deploy Latest Image to EKS
         run: |
-          kubectl set image deployment/${{ secrets.K8S_DEPLOYMENT_NAME }} \
-            ${{ secrets.K8S_CONTAINER_NAME }}=$IMAGE_URI:latest
+          kubectl set image deployment/hackathon-app \
+            hackathon-app=$IMAGE_URI:latest
 
       - name: Verify Deployment
         run: |
@@ -44,4 +44,4 @@ jobs:
       - name: Rollback if Failed
         if: failure()
         run: |
-          kubectl rollout undo deployment/${{ secrets.K8S_DEPLOYMENT_NAME }}  
+          kubectlrollout undo deployment/hackathon-app
