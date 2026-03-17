@@ -66,3 +66,4 @@ jobs:
           # Push image
           docker push $IMAGE_URI:$IMAGE_TAG
           docker push $IMAGE_URI:latest
+   
