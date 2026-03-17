@@ -6,7 +6,7 @@ metadata:
     app: hackathon-app
 
 spec:
-  type: NodePort
+  type: LoadBalancer
 
   selector:
     app: hackathon-app
