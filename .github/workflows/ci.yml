@@ -3,7 +3,7 @@ name: CI Pipeline
 on:
   push:
     branches:
-      - master
+      - main
   workflow_dispatch:
 
 jobs:
@@ -18,15 +18,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # ✅ Setup Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 11
 
+      # ✅ Build Application
       - name: Build Maven Project
         run: mvn clean package -DskipTests
 
+      # ✅ SonarQube Scan (DevSecOps)
       - name: SonarQube Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -37,6 +40,7 @@ jobs:
             -Dsonar.login=$SONAR_TOKEN \
             -Dsonar.projectKey=board-project
 
+      # ✅ AWS Auth
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -44,13 +48,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # ✅ Login to ECR
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
+      # ✅ Set Image URI
       - name: Set Image URI
         run: |
           echo "IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}" >> $GITHUB_ENV
 
+      # ✅ Build, Tag & Push Docker Image
       - name: Build, Tag and Push Docker Image
         run: |
           IMAGE_TAG=$(date +%s)
@@ -66,4 +73,9 @@ jobs:
           # Push image
           docker push $IMAGE_URI:$IMAGE_TAG
           docker push $IMAGE_URI:latest
-   
+
+      # ✅ Debug (optional but useful)
+      - name: Verify Image in ECR
+        run: |
+          echo "Image pushed:"
+          echo "$IMAGE_URI:latest"
