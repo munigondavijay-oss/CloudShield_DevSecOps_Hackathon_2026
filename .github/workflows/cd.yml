@@ -15,21 +15,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Download Image Tag Artifact (from CI)
-        uses: dawidd6/action-download-artifact@v3
-        with:
-          run_id: ${{ github.event.workflow_run.id }}
-          name: image-tag
-          path: .
-
-      - name: Verify Files
-        run: ls -R
-
-      - name: Read Image Tag
-        run: |
-          IMAGE_TAG=$(cat image_tag.txt)
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -47,11 +32,16 @@ jobs:
         run: |
           echo "IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}" >> $GITHUB_ENV
 
-      - name: Deploy to EKS
+      - name: Deploy Latest Image to EKS
         run: |
           kubectl set image deployment/${{ secrets.K8S_DEPLOYMENT_NAME }} \
-            ${{ secrets.K8S_CONTAINER_NAME }}=$IMAGE_URI:${{ env.IMAGE_TAG }}
+            ${{ secrets.K8S_CONTAINER_NAME }}=$IMAGE_URI:latest
 
       - name: Verify Deployment
         run: |
-          kubectl rollout status deployment/${{ secrets.K8S_DEPLOYMENT_NAME }}   
+          kubectl rollout status deployment/${{ secrets.K8S_DEPLOYMENT_NAME }}
+
+      - name: Rollback if Failed
+        if: failure()
+        run: |
+          kubectl rollout undo deployment/${{ secrets.K8S_DEPLOYMENT_NAME }}
