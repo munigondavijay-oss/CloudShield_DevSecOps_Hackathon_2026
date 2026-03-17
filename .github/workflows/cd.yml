@@ -59,4 +59,4 @@ jobs:
       - name: Rollback if Failed
         if: failure()
         run: |
-          kubectl rollout undo deployment/hackathon-app
+          kubectl rollout undo deployment/hackathon-app  
